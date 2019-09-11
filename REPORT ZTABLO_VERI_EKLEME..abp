@@ -1,0 +1,30 @@
+REPORT ZTABLO_VERI_EKLEME.
+
+TYPES: BEGIN OF tablo,
+       mandt      type mandt,
+       tcno       type z_de_tcno,
+       adsoyad    type z_de_adısoyadı,
+       cinsiyet   type z_de_cins2,
+       telno      type z_de_telno,
+END OF tablo.
+
+DATA:  itab TYPE TABLE OF tablo,
+       wa_itab TYPE tablo.
+
+CLEAR: itab[],
+       wa_itab.
+wa_itab-tcno = '11111111111'.
+wa_itab-ADSOYAD = 'Gaye Durmaz'.
+wa_itab-CINSIYET = 'Kadın'.
+wa_itab-TELNO = '11111111111'.
+
+APPEND wa_itab to itab.
+MODIFY ztest_gaye from TABLE itab.
+
+wa_itab-tcno = '21111111111'.
+wa_itab-ADSOYAD = 'Gamze Durmaz'.
+wa_itab-CINSIYET = 'Kadın'.
+wa_itab-TELNO = '21111111111'.
+
+APPEND wa_itab to itab.
+MODIFY ztest_gaye from TABLE itab.
