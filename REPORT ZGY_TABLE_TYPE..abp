@@ -1,0 +1,31 @@
+REPORT ZGY_TABLE_TYPE.
+
+** table type ile internal table oluşturma.
+DATA itab TYPE ZGY_TT_MARA.
+
+** oluşturulan structure tipinde work area
+DATA wa_itab like LINE OF itab.
+**  pa_matnr LIKE mara-matnr.
+
+SELECTION-SCREEN BEGIN OF BLOCK secim_ekrani.
+
+PARAMETERS: pa_matnr LIKE mara-matnr matchcode object zgy_sh_matnr .
+
+SELECTION-SCREEN END OF BLOCK secim_ekrani.
+
+
+wa_itab-MATNR = '1'.
+wa_itab-ERSDA = '20190912'.
+wa_itab-ERNAM = 'AAAAA'.
+
+INSERT wa_itab into TABLE itab.
+wa_itab-MATNR = '2'.
+wa_itab-ERSDA = '20190912'.
+wa_itab-ERNAM = 'BBBBB'.
+
+INSERT wa_itab into TABLE itab.
+
+
+LOOP AT itab INTO wa_itab.
+  WRITE:/ wa_itab-MATNR, wa_itab-ERSDA, wa_itab-ERNAM.
+ENDLOOP.
