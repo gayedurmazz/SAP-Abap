@@ -1,0 +1,19 @@
+REPORT ZSELECTION_SCREEN.
+
+******************************************************
+*      PARAMETERS for single fields
+
+*      SELECT-OPTIONS for complex selections
+
+*      SELECTION-SCREEN for formatting the selection screen and defining user-specific selection screens
+******************************************************
+
+
+SELECTION-SCREEN BEGIN OF BLOCK rad1 WITH FRAME TITLE title.
+  PARAMETERS: r1 RADIOBUTTON GROUP gr1,
+              r2 RADIOBUTTON GROUP gr1,
+              r3 RADIOBUTTON GROUP gr1.
+SELECTION-SCREEN END OF BLOCK rad1.
+
+INITIALIZATION.
+  title = 'Selection'.
