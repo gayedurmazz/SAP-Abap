@@ -1,0 +1,21 @@
+FUNCTION ZGY_FONKSIYON_ORNEGI.
+*"----------------------------------------------------------------------
+*"*"Local Interface:
+*"  IMPORTING
+*"     REFERENCE(INPUTNAME) TYPE  STRING
+*"  EXPORTING
+*"     REFERENCE(OUTPUT) TYPE  STRING
+*"  EXCEPTIONS
+*"      ZTC_EXCEP
+*"----------------------------------------------------------------------
+
+WRITE:/ 'Selam' , inputname.
+DATA a  TYPE string.
+a = inputname.
+TRANSLATE a TO UPPER CASE.
+
+output = a.
+
+** se37
+
+ENDFUNCTION.
