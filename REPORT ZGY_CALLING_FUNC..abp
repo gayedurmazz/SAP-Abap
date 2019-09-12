@@ -1,0 +1,22 @@
+REPORT ZGY_CALLING_FUNC.
+
+DATA lower TYPE string.
+lower = 'gaye'.
+
+DATA upper TYPE string.
+
+
+CALL FUNCTION 'ZGY_FONKSIYON_ORNEGI'
+  EXPORTING
+    INPUTNAME       = lower
+  IMPORTING
+    OUTPUT          = upper.
+* EXCEPTIONS
+*   ZTC_EXCEP       = 1
+*   OTHERS          = 2
+
+WRITE:/ lower, upper.
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
