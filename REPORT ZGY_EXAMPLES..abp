@@ -1,0 +1,89 @@
+REPORT ZGY_EXAMPLES.
+
+**** Mantıksal Operatörler
+DATA: lv_operator    TYPE string.
+
+DEFINE _operator.
+
+  lv_operator = &1.
+  WRITE:/ 'Kullanılan Operatör: ', lv_operator.
+
+END-OF-DEFINITION.
+
+DATA: s1 TYPE string VALUE 'Hello World',
+      s2 TYPE string VALUE 'hello world',
+      s3 TYPE string VALUE 'hello world',
+      s4 TYPE string VALUE '123456'.
+
+IF s2 CO s3.
+**    s2'deki tüm karakterler s3'te bulunuyorsa. Büyük küçük harf duyarlı.
+  lv_operator = 'Contains Only'.
+  _operator: lv_operator.
+ENDIF.
+
+IF s1 CN s3.
+**    s1'deki tüm karakterler s3'te bulunmuyorsa. Büyük küçük harf duyarlı.
+  lv_operator = 'Contains Not Only'.
+  _operator: lv_operator.
+ENDIF.
+
+IF s2 CA s3.
+**    s3'teki herhangi bir karakter s2'de bulunuyorsa. Büyük küçük harf duyarlı.
+**    s4 ile kıyaslandığında false üretiyor.
+  lv_operator = 'Contains Any'.
+  _operator: lv_operator.
+ENDIF.
+
+IF s4 NA s3.
+**   s3'teki herhangi bir karakter s2'de bulunmuyorsa. Büyük küçük harf duyarlı.
+**   s4 ile kıyaslandığında true üretir.
+  lv_operator = 'Contains Not Any'.
+  _operator: lv_operator.
+ENDIF.
+
+IF s1 CS s3.
+**    s1, s3'ü içeriyorsa. Büyük küçük harf duyarlı değildir.
+  lv_operator = 'Contains String'.
+  _operator: lv_operator.
+ENDIF.
+
+IF s4 NS s3.
+**    s4, s3'ü içermiyorsa. Büyük küçük harf duyarlı değildir.
+  lv_operator = 'Contains Not String'.
+  _operator: lv_operator.
+ENDIF.
+
+***** Form - Perform yapısı
+
+DATA: sayi1 TYPE i,
+      sayi2 TYPE i.
+
+sayi1 = 5.
+sayi2 = 10.
+
+PERFORM EKRANAYAZ USING sayi1.
+PERFORM EKRANAYAZ USING sayi2.
+PERFORM fibo.
+
+FORM ekranaYaz USING gv_sayi TYPE i.
+
+WRITE:/ 'Girilen Sayı:', gv_sayi.
+
+ENDFORM.
+
+*** Fibonacci
+FORM fibo.
+WRITE:/ 'Fibonacci Örneği:'.
+
+DATA: lv_ilkSayi TYPE i VALUE 1,
+      lv_ikinciSayi TYPE i VALUE 1,
+      lv_siradakiSayi TYPE i.
+
+write:/ lv_ilkSayi, lv_ikinciSayi.
+while lv_ikinciSayi < 100.
+      lv_SIRADAKISAYI = lv_ilkSayi + lv_ikinciSayi.
+      lv_ILKSAYI = lv_IKINCISAYI.
+      lv_IKINCISAYI = lv_SIRADAKISAYI.
+      write: lv_ikinciSayi.
+ENDWHILE.
+ENDFORM.
