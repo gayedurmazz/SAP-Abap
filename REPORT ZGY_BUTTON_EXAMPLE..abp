@@ -1,0 +1,41 @@
+REPORT ZGY_BUTTON_EXAMPLE.
+
+INITIALIZATION.
+  DATA lv_mesaj TYPE char40.
+
+START-OF-SELECTION.
+  "" Buton Gui Status yaratılarak eklenir.
+  "" Oluşturulan butonların tanımlanması.
+  SET PF-STATUS 'STATUS_1'.
+
+  WRITE: 'Hello World' COLOR 5.
+  WRITE:/ 'Tıklanabilir Alan "HOTSPOT"' HOTSPOT ON.
+
+
+AT SELECTION-SCREEN.
+
+AT LINE-SELECTION.
+  """ Hotspot alana tıklandıktan sonra yapılması istenen işlemler.
+ 
+  """ Kaçıncı sayfada olduğumuzu gösteren değişken.
+  WRITE sy-lsind TO lv_mesaj LEFT-JUSTIFIED.
+  CONCATENATE lv_mesaj '. sayfadayız' INTO lv_mesaj.
+  WRITE: lv_mesaj HOTSPOT ON.
+
+  "" WRITE: 'Bir sonraki liste'.
+
+AT USER-COMMAND.
+  "" Bu komut klavyeden veya mouseden
+  "" tıklanığında yapılan işlemi sy-ucom parametresine taşır.
+  "" Örneğin mesaj butonuna tıklandığında
+  IF sy-ucomm EQ 'MESAJ'.
+    "WRITE: 'Mesaj Verildi.'.
+    CLEAR lv_mesaj.
+    WRITE sy-lsind TO lv_mesaj LEFT-JUSTIFIED.
+    CONCATENATE lv_mesaj '. sayfadayız' INTO lv_mesaj
+     SEPARATED BY space.
+    WRITE: lv_mesaj.
+
+    ULINE. "" Altını çizmeye yarıyor.
+
+  ENDIF.
