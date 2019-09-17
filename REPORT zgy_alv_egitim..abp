@@ -1,0 +1,104 @@
+REPORT zgy_alv_egitim.
+* ALV List Display
+* Veri yığını listelemeye yarar.
+
+TABLES sflight.
+* occurs kaç kayıt beklediğimizi belirtir
+"" gt_outtab[] ve gt_outtab structure nesneleri oluşturulur.
+DATA: gt_outtab   LIKE sflight OCCURS 0 WITH HEADER LINE,
+      gs_layout   TYPE slis_layout_alv,
+      gt_fieldcat TYPE slis_t_fieldcat_alv.
+
+
+SELECT-OPTIONS: s_carrid FOR sflight-carrid,
+                s_connid FOR sflight-connid.
+
+START-OF-SELECTION.
+  SELECT * FROM sflight
+    INTO TABLE gt_outtab
+    WHERE carrid IN s_carrid
+    AND   connid IN s_connid.
+
+END-OF-SELECTION.
+
+
+  gs_layout-zebra = 'X'.
+
+** İnternal tabloda hangi alanlar olduğunu,
+** alanların özelliklerini getirir.
+  CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+    EXPORTING
+      i_program_name         = sy-repid   "" Programın adı
+      i_internal_tabname     = 'GT_OUTTAB'
+*     I_STRUCTURE_NAME       =
+*     I_CLIENT_NEVER_DISPLAY = 'X'
+      i_inclname             = sy-repid
+*     I_BYPASSING_BUFFER     =
+*     I_BUFFER_ACTIVE        =
+    CHANGING
+      ct_fieldcat            = gt_fieldcat[]
+    EXCEPTIONS
+      inconsistent_interface = 1
+      program_error          = 2
+      OTHERS                 = 3.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+  """ Callback_program parametresine değer vermezsek
+  """ sap hangi programa geri dönüş yapacağını bilemez.
+  """ SY-REPID programın adını verir.
+  CALL FUNCTION 'REUSE_ALV_LIST_DISPLAY'
+    EXPORTING
+*     I_INTERFACE_CHECK        = ' '
+*     I_BYPASSING_BUFFER       =
+*     I_BUFFER_ACTIVE          = ' '
+     I_CALLBACK_PROGRAM       = SY-REPID
+      i_callback_pf_status_set = 'SET_PF_STATUS '
+      i_callback_user_command  = 'SET_USER_COMMAND '
+*     I_STRUCTURE_NAME         =
+      is_layout                = gs_layout
+      it_fieldcat              = gt_fieldcat[]
+*     IT_EXCLUDING             =
+*     IT_SPECIAL_GROUPS        =
+*     IT_SORT                  =
+*     IT_FILTER                =
+*     IS_SEL_HIDE              =
+*     I_DEFAULT                = 'X'
+*     I_SAVE                   = ' '
+*     IS_VARIANT               =
+*     IT_EVENTS                =
+*     IT_EVENT_EXIT            =
+*     IS_PRINT                 =
+*     IS_REPREP_ID             =
+*     I_SCREEN_START_COLUMN    = 0
+*     I_SCREEN_START_LINE      = 0
+*     I_SCREEN_END_COLUMN      = 0
+*     I_SCREEN_END_LINE        = 0
+*     IR_SALV_LIST_ADAPTER     =
+*     IT_EXCEPT_QINFO          =
+*     I_SUPPRESS_EMPTY_DATA    = ABAP_FALSE
+* IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER  =
+*     ES_EXIT_CAUSED_BY_USER   =
+    TABLES
+      t_outtab                 = gt_outtab
+* EXCEPTIONS
+*     PROGRAM_ERROR            = 1
+*     OTHERS                   = 2
+    .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+FORM set_pf_status USING p_extab TYPE slis_t_extab.
+
+  SET PF-STATUS 'PFSTATUS'.
+
+ENDFORM.
+
+
+FORM set_user_command USING p_ucomm
+                            p_selfield TYPE slis_selfield.
+*** p_ucomm parametresinde işlem butonuna tıklanığı bilgisi var.
+ENDFORM.
