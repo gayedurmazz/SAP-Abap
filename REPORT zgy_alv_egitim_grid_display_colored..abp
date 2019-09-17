@@ -1,0 +1,255 @@
+REPORT zgy_alv_egitim_grid_display_colored.
+
+TABLES: sflight.
+
+DATA: BEGIN OF gt_outtab OCCURS 0,
+        sel      TYPE  char1,  "" Bir karakterlik seçim alanı. Selecion.
+        lights,
+        color(4). "" SAP'in renk kodları 4 karakter.
+        INCLUDE STRUCTURE sflight.
+DATA: cellcolor TYPE lvc_t_scol.
+DATA END OF gt_outtab.
+
+
+
+DATA: ""gt_outtab   LIKE sflight OCCURS 0 WITH HEADER LINE,
+  gs_layout   TYPE slis_layout_alv,
+  gt_fieldcat TYPE slis_t_fieldcat_alv,
+  gs_fieldcat LIKE LINE OF gt_fieldcat.
+SELECTION-SCREEN BEGIN OF BLOCK bl1 WITH FRAME TITLE text-001.
+SELECT-OPTIONS s_carrid FOR sflight-carrid.
+SELECTION-SCREEN END OF BLOCK bl1.
+
+START-OF-SELECTION.
+  PERFORM get_data.
+
+END-OF-SELECTION.
+
+  gs_layout-window_titlebar = 'Deneme ALV'.
+  gs_layout-box_fieldname = 'SEL'.
+  gs_layout-lights_fieldname = 'LIGHTS'.    "" Trafik ışığı
+  gs_layout-info_fieldname = 'COLOR'.       "" Satır renlendirme
+  gs_layout-coltab_fieldname = 'CELLCOLOR'. "" Hücre renklendirme
+
+  CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+    EXPORTING
+      i_program_name     = sy-repid
+      i_internal_tabname = 'GT_OUTTAB' "" Büyük harfle yazılmalı!!!
+*     I_STRUCTURE_NAME   =
+*     I_CLIENT_NEVER_DISPLAY       = 'X'
+      i_inclname         = sy-repid
+      i_bypassing_buffer = 'X'
+*     I_BUFFER_ACTIVE    =
+    CHANGING
+      ct_fieldcat        = gt_fieldcat[]
+* EXCEPTIONS
+*     INCONSISTENT_INTERFACE       = 1
+*     PROGRAM_ERROR      = 2
+*     OTHERS             = 3
+    .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+**** carrid alanındaki tüm verilere hotspot özelliği ekleme.
+  LOOP AT gt_fieldcat INTO gs_fieldcat.
+    CASE gs_fieldcat-fieldname.
+      WHEN 'CARRID'.
+        gs_fieldcat-hotspot = 'X'.
+        MODIFY gt_fieldcat FROM gs_fieldcat.
+        CLEAR gs_fieldcat.
+
+        "" Belirli alanlarda değişiklik yapılacaksa fieldcatalog kullanılır.
+        "" Bir alanı editlemeye açma
+      WHEN 'SEATMAX_B'.
+        gs_fieldcat-edit = 'X'.
+        MODIFY gt_fieldcat FROM gs_fieldcat.
+        CLEAR gs_fieldcat.
+
+        "" Sütun renklendirme.
+      WHEN 'CANNID'.
+        gs_fieldcat-emphasize = 'C200'.   "" Sütun renklenirme.
+        MODIFY gt_fieldcat FROM gs_fieldcat.
+        CLEAR gs_fieldcat.
+
+    ENDCASE.
+
+  ENDLOOP.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+*     I_INTERFACE_CHECK        = ' '
+*     I_BYPASSING_BUFFER       = ' '
+*     I_BUFFER_ACTIVE          = ' '
+      i_callback_program       = sy-repid
+      i_callback_pf_status_set = 'SET_PF_STATUS'
+      i_callback_user_command  = 'SET_USER_COMMAND'
+*     I_CALLBACK_TOP_OF_PAGE   = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME         =
+*     I_BACKGROUND_ID          = ' '
+*     I_GRID_TITLE             =
+*     I_GRID_SETTINGS          =
+      is_layout                = gs_layout
+      it_fieldcat              = gt_fieldcat[]
+*     IT_EXCLUDING             =
+*     IT_SPECIAL_GROUPS        =
+*     IT_SORT                  =
+*     IT_FILTER                =
+*     IS_SEL_HIDE              =
+*     I_DEFAULT                = 'X'
+*     I_SAVE                   = ' '
+*     IS_VARIANT               =
+*     IT_EVENTS                =
+*     IT_EVENT_EXIT            =
+*     IS_PRINT                 =
+*     IS_REPREP_ID             =
+*     I_SCREEN_START_COLUMN    = 0
+*     I_SCREEN_START_LINE      = 0
+*     I_SCREEN_END_COLUMN      = 0
+*     I_SCREEN_END_LINE        = 0
+*     I_HTML_HEIGHT_TOP        = 0
+*     I_HTML_HEIGHT_END        = 0
+*     IT_ALV_GRAPHICS          =
+*     IT_HYPERLINK             =
+*     IT_ADD_FIELDCAT          =
+*     IT_EXCEPT_QINFO          =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+*  IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER  =
+*     ES_EXIT_CAUSED_BY_USER   =
+    TABLES
+      t_outtab                 = gt_outtab
+*  EXCEPTIONS
+*     PROGRAM_ERROR            = 1
+*     OTHERS                   = 2
+    .
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  """ Butonlar stanart bir programdan kopyalandı.
+FORM set_pf_status USING p_extab TYPE slis_t_extab.
+  SET PF-STATUS 'STANDARD'.
+ENDFORM.
+
+FORM set_user_command USING p_ucomm
+                            p_selfield TYPE slis_selfield.
+
+  PERFORM upate_itab.
+
+  """" Seçilen alanların koltuk sayılarını 1 arttırma.
+  CASE p_ucomm.
+    WHEN '&IC1'.
+      CLEAR gt_outtab.
+      "" Tıklanan indeksteki eğeri tablodan oku.
+      READ TABLE gt_outtab INDEX p_selfield-tabindex.
+      "" Tıklanan değeri AUN parametresi ile kayıtlı
+      "" sipariş alanına yazma.
+      SET PARAMETER ID 'AUN' FIELD gt_outtab-carrid.
+      CALL TRANSACTION 'VA02'.
+    WHEN 'KOLTUK'.
+      LOOP AT gt_outtab WHERE sel EQ 'X'.
+        ADD 1 TO gt_outtab-seatsocc.
+        MODIFY gt_outtab.
+        CLEAR gt_outtab.
+      ENDLOOP.
+      "" ALV'nin güncellenmesi.
+      p_selfield-refresh = 'X'.
+  ENDCASE.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  UPATE_ITAB
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM upate_itab .
+
+  "" ALV local object grid oluşturma.
+  DATA: lo_grid TYPE REF TO cl_gui_alv_grid.
+
+  CALL FUNCTION 'GET_GLOBALS_FROM_SLVC_FULLSCR'
+*   EXPORTING
+*     IR_SALV_FULLSCREEN_ADAPTER       =
+    IMPORTING
+*     ET_EXCLUDING                     =
+*     E_REPID                          =
+*     E_CALLBACK_PROGRAM               =
+*     E_CALLBACK_ROUTINE               =
+      e_grid = lo_grid
+*     ET_FIELDCAT_LVC                  =
+*     ER_TRACE                         =
+*     E_FLG_NO_HTML                    =
+*     ES_LAYOUT_KKBLO                  =
+*     ES_SEL_HIDE                      =
+*     ET_EVENT_EXIT                    =
+*     ER_FORM_TOL                      =
+*     ER_FORM_EOL                      =
+    .
+
+  "" Değişim olduğunda alv'nin güncellenmesi.
+  CALL METHOD lo_grid->check_changed_data
+*    IMPORTING
+*      e_valid   =
+*    CHANGING
+*      c_refresh = 'X'
+    .
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  GET_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_data .
+
+  DATA: ls_cellcolor TYPE lvc_s_scol.
+  SELECT * FROM sflight INTO CORRESPONDING FIELDS OF TABLE gt_outtab
+  WHERE carrid IN s_carrid.
+
+  """ Kalan koltuk sayısına göre alan renklendirme.
+  LOOP AT gt_outtab.
+    IF gt_outtab-seatsocc GT 200.
+      gt_outtab-lights = 1.
+    ELSEIF gt_outtab-seatsocc GT 100.
+      gt_outtab-lights = 2.
+    ELSE.
+      gt_outtab-lights = 3.
+    ENDIF.
+
+    """ Maks. koltuk sayısı 250'den fazla olan satırları boyama.
+*    IF gt_outtab-seatsmax GT 250.
+*      gt_outtab-color = 'C100'.
+*    ENDIF.
+
+    """ Hücre boyama
+    IF gt_outtab-seatsmax GT 250.
+      ls_cellcolor-fname = 'SEATSMAX'.
+      ls_cellcolor-color-col = 4.
+      ls_cellcolor-color-int = '1'.
+      ls_cellcolor-color-inv = '1'.
+      APPEND ls_cellcolor TO gt_outtab-cellcolor.
+    ENDIF.
+
+    """ Tarihten küçük olan hücreler boyanır.
+    IF gt_outtab-fldate LT '20130601'.
+      ls_cellcolor-fname = 'FLDATE'.
+      ls_cellcolor-color-col = 3.
+      ls_cellcolor-color-int = '1'.
+      ls_cellcolor-color-inv = '1'.
+      APPEND ls_cellcolor TO gt_outtab-cellcolor.
+    ENDIF.
+
+    MODIFY gt_outtab.
+    CLEAR gt_outtab.
+
+  ENDLOOP.
+ENDFORM.
